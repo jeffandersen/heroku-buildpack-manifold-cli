@@ -1,0 +1,41 @@
+#!/bin/sh
+
+echo_header() {
+  echo "-----> $1"
+}
+echo_indented() {
+  echo "       $1"
+}
+
+# Install the binary
+
+MANIFOLD_VERSION="0.9.1"
+MANIFOLD_DIR="$1/.manifold/bin"
+
+echo_header "Installing mainfold-cli"
+echo_indented "Version: $MANIFOLD_VERSION"
+
+OS=`uname | tr '[:upper:]' '[:lower:]'`
+REPO="https://github.com/manifoldco/manifold-cli"
+FILENAME="manifold-cli_${MANIFOLD_VERSION}_${OS}_amd64.tar.gz"
+ARTIFACT_URL="${REPO}/releases/download/v${MANIFOLD_VERSION}/${FILENAME}"
+
+mkdir -p $MANIFOLD_DIR 1> /dev/null
+cd $MANIFOLD_DIR
+curl -sS --compressed -L -q $ARTIFACT_URL --output $FILENAME 1> /dev/null
+tar -zxvf $FILENAME 1> /dev/null
+rm $FILENAME 1> /dev/null
+
+# Add profile.d script
+
+output_dir=.profile.d
+output_path=$output_dir/manifold_cli.sh
+
+echo_header "Creating profile.d script"
+
+mkdir -p $1/$output_dir
+cat << EOF > $1/$output_path
+PATH=.manifold/bin:$PATH
+EOF
+
+echo_indented "Script installed to $output_path"
