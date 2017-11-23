@@ -1,4 +1,8 @@
-#!/bin/sh
+#!/bin/bash
+# bin/compile BUILD_DIR CACHE_DIR ENV_DIR
+
+BUILD_DIR=$1
+CACHE_DIR=$2
 
 echo_header() {
   echo "-----> $1"
@@ -8,34 +12,34 @@ echo_indented() {
 }
 
 # Install the binary
+echo_header "Installing manifold cli"
+echo_indented $CACHE_DIR
 
-MANIFOLD_VERSION="0.9.1"
-MANIFOLD_DIR="$1/.manifold/bin"
-
-echo_header "Installing mainfold-cli"
-echo_indented "Version: $MANIFOLD_VERSION"
+MANIFOLD_VERSION="0.10.1"
+MANIFOLD_DIR="$BUILD_DIR/vendor/bin"
 
 OS=`uname | tr '[:upper:]' '[:lower:]'`
-REPO="https://github.com/manifoldco/manifold-cli"
-FILENAME="manifold-cli_${MANIFOLD_VERSION}_${OS}_amd64.tar.gz"
-ARTIFACT_URL="${REPO}/releases/download/v${MANIFOLD_VERSION}/${FILENAME}"
+MANIFOLD_FILENAME="manifold-cli_${MANIFOLD_VERSION}_${OS}_amd64.tar.gz"
 
-mkdir -p $MANIFOLD_DIR 1> /dev/null
-cd $MANIFOLD_DIR
-curl -sS --compressed -L -q $ARTIFACT_URL --output $FILENAME 1> /dev/null
-tar -zxvf $FILENAME 1> /dev/null
-rm $FILENAME 1> /dev/null
+if [ ! -a $CACHE_DIR/$MANIFOLD_FILENAME ]; then
+  MANIFOLD_REPO="https://github.com/manifoldco/manifold-cli"
+  MANIFOLD_ARTIFACT_URL="${MANIFOLD_REPO}/releases/download/v${MANIFOLD_VERSION}/${MANIFOLD_FILENAME}"
+  curl -sS --compressed -L -q $MANIFOLD_ARTIFACT_URL --output $MANIFOLD_FILENAME
+  echo_indented "Version ($MANIFOLD_VERSION) downloaded"
+fi
 
-# Add profile.d script
+mkdir -p $MANIFOLD_DIR
+
+tar xvf $MANIFOLD_FILENAME --directory $MANIFOLD_DIR 1> /dev/null
 
 output_dir=.profile.d
 output_path=$output_dir/manifold_cli.sh
 
 echo_header "Creating profile.d script"
 
-mkdir -p $1/$output_dir
-cat << EOF > $1/$output_path
-PATH=.manifold/bin:$PATH
+mkdir -p $BUILD_DIR/$output_dir
+cat << EOF > $BUILD_DIR/$output_path
+PATH=\$HOME/vendor/bin:$PATH
 EOF
 
-echo_indented "Script installed to $output_path"
+echo_indented "manifold cli installed"
